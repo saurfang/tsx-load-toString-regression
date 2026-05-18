@@ -3,9 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "repro": "pnpm repro:working && echo '' && pnpm repro:broken",
-    "repro:working": "echo '--- tsx 4.21.0 ---' && node node_modules/tsx-working/dist/cli.mjs entry.mjs",
-    "repro:broken":  "echo '--- tsx 4.22.2 ---' && node node_modules/tsx-broken/dist/cli.mjs entry.mjs"
+    "repro": "node repro.mjs"
   },
   "dependencies": {
     "tsx-working": "npm:tsx@4.21.0",

@@ -9,33 +9,40 @@ pnpm install && pnpm repro
 (or `npm install && npm run repro`)
 
 Both `tsx@4.21.0` (working) and `tsx@4.22.2` (broken) are installed side by
-side via npm aliases, so a single install demonstrates both.
+side via npm aliases. The `repro` script runs both, prints their outputs,
+and **exits with status 1 if the bug is present** so CI runs go red.
 
-## Expected output
+## Output today
 
 ```
---- tsx 4.21.0 ---
+--- tsx 4.21.0 (expected: works) ---
 [child] module body executed
 keys:     [ 'value' ]
 m.value:  42
 
---- tsx 4.22.2 ---
+--- tsx 4.22.2 (expected: broken) ---
 keys:     []
 m.value:  undefined
+
+❌ TSX BUG CONFIRMED: tsx 4.22.2 returned an empty namespace instead of `{ value: 42 }`.
 ```
 
 On `4.22.2` (and `4.21.1`, `4.22.0`, `4.22.1`) `[child] module body executed`
 is **never printed** — the target module is never actually evaluated. Yet the
 dynamic-import promise resolves successfully with an empty namespace.
 
-## Files (4 total)
+When the bug is fixed upstream, `pnpm repro` will print `✅` and exit 0
+instead — so this repo doubles as a regression detector.
+
+## Files
 
 - `entry.mjs` — registers a no-op async `module.register()` hook, then
   `await import('./child.ts')`.
 - `hook.mjs` — pass-through async load hook that just calls `nextLoad`.
 - `child.ts` — exports `value = 42` and logs from its module body.
-- `package.json` — both tsx versions as aliases (`tsx-working`, `tsx-broken`)
-  plus a `repro` script that runs both back-to-back.
+- `repro.mjs` — runs both tsx versions, prints outputs, asserts the bug,
+  exits non-zero if confirmed.
+- `package.json` — both tsx versions as aliases (`tsx-working`, `tsx-broken`).
 
 ## Cause (summary)
 
